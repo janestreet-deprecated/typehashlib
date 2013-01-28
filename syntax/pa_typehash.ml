@@ -72,7 +72,7 @@ let cast_int_to_internal expr =
 
 let hash expr =
   let loc = Ast.loc_of_expr expr in
-  <:expr@loc<Hashtbl.hash_param max_int max_int $expr$ >>
+  <:expr@loc<Typehash.hash_param max_int max_int $expr$ >>
 
 let to_hash = function
   (* Hash is idempotent... *)
@@ -105,7 +105,7 @@ let prod ~config ~loc ?name exprs =
         | _ -> raise Exit
       ) exprs
       in
-      <:expr@loc< $int:string_of_int (Hashtbl.hash v)$ >>
+      <:expr@loc< $int:string_of_int (Typehash.hash v)$ >>
     with Exit -> exp
   else*)
     exp
@@ -125,20 +125,20 @@ module Config = struct
     GLOBAL: gram_entry;
     typehash_arg: [[
       LIDENT "version"; "=" ; version = STRING -> (function
-        | { typ = `Alias; _ } ->
+        | { typ = `Alias; version=_; simplify=_; unsafe=_ } ->
           failwith "typehash: \"version\" would defeat the purpose of \
                      \"alias\"";
         | acc -> { acc with version = Some version })
     | LIDENT "debug"  -> (fun acc -> { acc with simplify = false })
     | LIDENT "abstract"; "="; uid = STRING -> (function
-        | { typ = `Alias; _ } ->
+        | { typ = `Alias; version=_; simplify=_; unsafe=_ } ->
          failwith "typehash: \"abstract\" and \"alias\" are mutually exclusive";
         | acc -> { acc with typ = `Abstract uid})
     | LIDENT "alias" -> (function
-        | { typ = `Abstract _; _ } ->
+        | { typ = `Abstract _; version=_; simplify=_; unsafe=_ } ->
           failwith "typehash: \"abstract\" and \"alias\" are mutually \
                     exclusive";
-        | { version = Some _; _ } ->
+        | { version = Some _; typ=_; simplify=_; unsafe=_ } ->
           failwith "typehash: \"version\" would defeat the purpose of \
                               \"alias\"";
         | acc -> { acc with typ = `Alias});
@@ -351,7 +351,7 @@ generated hashes.
         ty
         ~fn:"typedef::alias"
         ~msg:"Can only generate alias for non-recursively defined types"
-    | [{body;params;loc;_}] ->
+    | [{body;params;loc; name=_; internal_name=_ }] ->
       let id,rparams = unalias body in
       check_alias_list params rparams;
       let path = Gen.get_rev_id_path id [] in
@@ -406,7 +406,7 @@ generated hashes.
   let generate_abstract_body ~config ~loc ~name typedefs =
     if not config.unsafe then begin
       match typedefs with
-      | [ {body=Ast.TyNil _; _} ] -> ()
+      | [ {body=Ast.TyNil _; loc=_; params=_; name=_; internal_name=_ } ] -> ()
       | _ ->
         errf loc "The abstract typehash keyword is supposed to be use on a \
 single non-reccursive abstract type:
@@ -445,7 +445,7 @@ module Gen_struct = struct
     let typedefs,body = Body.generate config rec_ ty in
     let bodys = match typedefs with
       | [] -> assert false
-      | [{Body.name;loc;params;_} as td] ->
+      | [{Body.name;loc;params; body=_; internal_name=_ } as td] ->
         [ <:str_item@loc< value $lid:bid td.Body.name$ :
             Typehash.internal $typ_constraint ~name ~loc ~params$ =
             $to_hash body$ >> ]
@@ -461,7 +461,7 @@ module Gen_struct = struct
             <:expr@loc< __typehash_typedef_body >>
         in
         b_strit
-        @ List.map (fun ({Body.name;loc;params;_} as td) ->
+        @ List.map (fun ({Body.name;loc;params; body=_; internal_name=_ } as td) ->
           <:str_item@loc<
             value $lid:bid td.Body.name$ :
             Typehash.internal $typ_constraint ~name ~loc ~params$ =
@@ -472,7 +472,7 @@ module Gen_struct = struct
     let decls =
       bodys
       @ List.map (function
-        | {Body.name=name;params=[];loc=loc;_} ->
+        | {Body.name=name;params=[];loc=loc; body=_; internal_name=_ } ->
           let ty = typ_constraint ~loc ~params:[] ~name in
           let base =
             <:str_item@loc<
@@ -483,7 +483,7 @@ module Gen_struct = struct
             <:str_item@loc< $base$; value typehash = $lid:extid name$ >>
           else
             base
-        | {Body.loc=loc; _} -> <:str_item@loc< >>)
+        | {Body.loc=loc; body=_; params=_; name=_; internal_name=_ } -> <:str_item@loc< >>)
         typedefs
     in
     Ast.stSem_of_list decls

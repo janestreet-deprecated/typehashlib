@@ -25,3 +25,6 @@ external to_int : _ t -> int = "%identity"
 
 (**/**)
 type +'a internal
+val hash : 'a -> int
+val hash_param : int -> int -> 'a -> int
+
