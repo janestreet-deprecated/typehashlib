@@ -83,10 +83,10 @@ let to_int = function
   | <:expr< $int:_$ >> as expr -> expr
   | expr -> hash expr
 
-let lit ~config loc name : Ast.expr =
-  if config.simplify then
+let lit ~config:_ loc name : Ast.expr =
+(*  if config.simplify then
     <:expr@loc< $int:string_of_int (Hashtbl.hash name)$ >>
-  else
+  else*)
     <:expr@loc< $str:name$ >>
 
 let prod ~config ~loc ?name exprs =
@@ -96,7 +96,7 @@ let prod ~config ~loc ?name exprs =
   in
   let exp = <:expr@loc< ( $tup:Ast.exCom_of_list exprs$ ) >> in
     (* Tries to simplify the generated expression to a single int if possible *)
-  if config.simplify then (* Hashtbl.hash of a list is the same as
+(*  if config.simplify then (* Hashtbl.hash of a list is the same as
                            Hashtbl.hash of the tuple of the elements in that
                            list *)
     try
@@ -107,7 +107,7 @@ let prod ~config ~loc ?name exprs =
       in
       <:expr@loc< $int:string_of_int (Hashtbl.hash v)$ >>
     with Exit -> exp
-  else
+  else*)
     exp
 
 module Config = struct
