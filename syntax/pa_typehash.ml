@@ -1,3 +1,4 @@
+
 open Camlp4.PreCast
 module Gen = Pa_type_conv.Gen
 
@@ -124,20 +125,20 @@ module Config = struct
     GLOBAL: gram_entry;
     typehash_arg: [[
       LIDENT "version"; "=" ; version = STRING -> (function
-        | { typ = `Alias } ->
+        | { typ = `Alias; _ } ->
           failwith "typehash: \"version\" would defeat the purpose of \
                      \"alias\"";
         | acc -> { acc with version = Some version })
     | LIDENT "debug"  -> (fun acc -> { acc with simplify = false })
     | LIDENT "abstract"; "="; uid = STRING -> (function
-        | { typ = `Alias } ->
+        | { typ = `Alias; _ } ->
          failwith "typehash: \"abstract\" and \"alias\" are mutually exclusive";
         | acc -> { acc with typ = `Abstract uid})
     | LIDENT "alias" -> (function
-        | { typ = `Abstract _ } ->
+        | { typ = `Abstract _; _ } ->
           failwith "typehash: \"abstract\" and \"alias\" are mutually \
                     exclusive";
-        | { version = Some _ } ->
+        | { version = Some _; _ } ->
           failwith "typehash: \"version\" would defeat the purpose of \
                               \"alias\"";
         | acc -> { acc with typ = `Alias});
@@ -350,7 +351,7 @@ generated hashes.
         ty
         ~fn:"typedef::alias"
         ~msg:"Can only generate alias for non-recursively defined types"
-    | [{body;params;loc}] ->
+    | [{body;params;loc;_}] ->
       let id,rparams = unalias body in
       check_alias_list params rparams;
       let path = Gen.get_rev_id_path id [] in
@@ -405,7 +406,7 @@ generated hashes.
   let generate_abstract_body ~config ~loc ~name typedefs =
     if not config.unsafe then begin
       match typedefs with
-      | [ {body=Ast.TyNil _} ] -> ()
+      | [ {body=Ast.TyNil _; _} ] -> ()
       | _ ->
         errf loc "The abstract typehash keyword is supposed to be use on a \
 single non-reccursive abstract type:
@@ -415,7 +416,8 @@ You can disable this error by adding \"unsafe\" to the typehash arguments"
     let kernel = lit ~config loc ("abstract:" ^ name) in
     version ~config kernel
 
-  let generate config ty : typedef list * Ast.expr =
+  let generate config rec_ ty : typedef list * Ast.expr =
+    if not rec_ then failwith "pa_typehash doesn't handle non recursive types for now.";
     let loc = Ast.loc_of_ctyp ty in
     let typedefs = get_type_defs ty in
     let body =
@@ -439,11 +441,11 @@ module Gen_struct = struct
     let loc = Ast.loc_of_expr expr in
     <:expr@loc< ($expr$ : Typehash.internal $ty$) >>
 
-  let generate ~config ty =
-    let typedefs,body = Body.generate config ty in
+  let generate ~config rec_ ty =
+    let typedefs,body = Body.generate config rec_ ty in
     let bodys = match typedefs with
       | [] -> assert false
-      | [{Body.name;loc;params} as td] ->
+      | [{Body.name;loc;params;_} as td] ->
         [ <:str_item@loc< value $lid:bid td.Body.name$ :
             Typehash.internal $typ_constraint ~name ~loc ~params$ =
             $to_hash body$ >> ]
@@ -459,7 +461,7 @@ module Gen_struct = struct
             <:expr@loc< __typehash_typedef_body >>
         in
         b_strit
-        @ List.map (fun ({Body.name;loc;params} as td) ->
+        @ List.map (fun ({Body.name;loc;params;_} as td) ->
           <:str_item@loc<
             value $lid:bid td.Body.name$ :
             Typehash.internal $typ_constraint ~name ~loc ~params$ =
@@ -470,7 +472,7 @@ module Gen_struct = struct
     let decls =
       bodys
       @ List.map (function
-        | {Body.name=name;params=[];loc=loc} ->
+        | {Body.name=name;params=[];loc=loc;_} ->
           let ty = typ_constraint ~loc ~params:[] ~name in
           let base =
             <:str_item@loc<
@@ -481,7 +483,7 @@ module Gen_struct = struct
             <:str_item@loc< $base$; value typehash = $lid:extid name$ >>
           else
             base
-        | {Body.loc=loc} -> <:str_item@loc< >>)
+        | {Body.loc=loc; _} -> <:str_item@loc< >>)
         typedefs
     in
     Ast.stSem_of_list decls
@@ -500,7 +502,7 @@ module Gen_sig = struct
       let left = sig_of_td__loop <:ctyp@loc< $acc$ $tp$ >> tps in
       <:ctyp@loc< Typehash.t $tp$ -> $left$ >>
 
-  let rec sig_of_tds = function
+  let rec sig_of_tds _rec = function
     | Ast.TyDcl (loc, name, params, _rhs, _cl) ->
       let ty = typ_constraint ~loc ~params ~name in
       let body =
@@ -520,14 +522,14 @@ module Gen_sig = struct
       else
         body
     | <:ctyp@loc< $tp1$ and $tp2$ >> ->
-      <:sig_item@loc< $sig_of_tds tp1$; $sig_of_tds tp2$ >>
+      <:sig_item@loc< $sig_of_tds _rec tp1$; $sig_of_tds _rec tp2$ >>
     | _ -> assert false  (* impossible *)
 
 end
 
 let () = Pa_type_conv.add_generator_with_arg "typehash" Config.gram_entry
-  (fun conf ctyp ->
+  (fun conf rec_ ctyp ->
    let config = match conf with None -> Config.empty | Some c -> c in
-   Gen_struct.generate ~config ctyp)
+   Gen_struct.generate rec_ ~config ctyp)
 
-let () = Pa_type_conv.add_sig_generator "typehash" Gen_sig.sig_of_tds
+let () = Pa_type_conv.add_sig_generator ~delayed:true "typehash" Gen_sig.sig_of_tds
