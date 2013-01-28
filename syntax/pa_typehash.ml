@@ -148,7 +148,7 @@ module Config = struct
     ]];
 
     gram_entry: [[
-      v = LIST0 typehash_arg SEP ";" ; EOI ->
+      v = LIST0 typehash_arg SEP ";" ; `EOI ->
         ListLabels.fold_left v
           ~f:(fun acc f -> f acc)
           ~init:empty
