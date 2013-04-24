@@ -19,6 +19,7 @@ Library typehashlib
   Path:               lib
   Modules:            Typehash
   FindlibName:        typehashlib
+  CSources:           typehash_stubs.c
 
 Library pa_typehash
   Path:               syntax
