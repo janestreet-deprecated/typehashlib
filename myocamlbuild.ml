@@ -1,5 +1,5 @@
 (* OASIS_START *)
-(* DO NOT EDIT (digest: 04a54947f2f13e0b4e0c4b02fe7d6f4c) *)
+(* DO NOT EDIT (digest: a4a555c0c86697af0761e9ca38b0dd44) *)
 module OASISGettext = struct
 (* # 21 "/mnt/local/sda1/jdimino/dot-opam/4.01.0dev+short-paths/build/oasis.0.3.0/src/oasis/OASISGettext.ml" *)
 
@@ -479,7 +479,7 @@ let package_default =
   {
      MyOCamlbuildBase.lib_ocaml =
        [("typehashlib", ["lib"]); ("pa_typehash", ["syntax"])];
-     lib_c = [];
+     lib_c = [("typehashlib", "lib", [])];
      flags = [];
      includes = [];
      }

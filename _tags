@@ -1,5 +1,5 @@
 # OASIS_START
-# DO NOT EDIT (digest: 005760ec7692a4f8012facd5907f08ce)
+# DO NOT EDIT (digest: e0a3437ef2b210af943150e38675bf18)
 # Ignore VCS directories, you can use the same kind of rule outside 
 # OASIS_START/STOP if you want to exclude directories that contains 
 # useless stuff for the build process
@@ -15,6 +15,7 @@
 "_darcs": not_hygienic
 # Library typehashlib
 "lib/typehashlib.cmxs": use_typehashlib
+<lib/typehashlib.{cma,cmxa}>: use_libtypehashlib_stubs
 # Library pa_typehash
 "syntax/pa_typehash.cmxs": use_pa_typehash
 <syntax/*.ml{,i}>: pkg_camlp4.lib

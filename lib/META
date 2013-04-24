@@ -1,6 +1,6 @@
 # OASIS_START
-# DO NOT EDIT (digest: 829a07549dee2299b0021ac3d79e8fb9)
-version = "109.15.00"
+# DO NOT EDIT (digest: f1041db2f27928be4a506e95d904d7f7)
+version = "109.15.01"
 description =
 "Syntax extension for deriving \"typehash\" functions automatically."
 archive(byte) = "typehashlib.cma"
@@ -9,7 +9,7 @@ archive(native) = "typehashlib.cmxa"
 archive(native, plugin) = "typehashlib.cmxs"
 exists_if = "typehashlib.cma"
 package "syntax" (
- version = "109.15.00"
+ version = "109.15.01"
  description = "Syntax extension for \"with typehash\""
  requires = "camlp4 type_conv typehashlib"
  archive(syntax, preprocessor) = "pa_typehash.cma"
