@@ -26,7 +26,8 @@ Library pa_typehash
   Modules:            Pa_typehash
   FindlibParent:      typehashlib
   FindlibName:        syntax
-  BuildDepends:       camlp4.lib,
+  BuildDepends:       camlp4.extend,
+                      camlp4.lib,
                       camlp4.quotations,
                       type_conv (>= 3.0.5)
   XMETAType:          syntax

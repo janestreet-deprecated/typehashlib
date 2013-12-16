@@ -22,4 +22,4 @@
 <syntax/*.ml{,i}>: package(camlp4.quotations)
 <syntax/*.ml{,i}>: package(type_conv)
 # OASIS_STOP
-<syntax/pa_typehash.ml>: syntax_camlp4o,pkg_camlp4.extend
+<syntax/pa_typehash.ml>: syntax_camlp4o
