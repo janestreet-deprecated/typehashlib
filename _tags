@@ -1,7 +1,7 @@
 # OASIS_START
-# DO NOT EDIT (digest: e0a3437ef2b210af943150e38675bf18)
-# Ignore VCS directories, you can use the same kind of rule outside 
-# OASIS_START/STOP if you want to exclude directories that contains 
+# DO NOT EDIT (digest: 56d2494204c7bc5be3182951fcea85ba)
+# Ignore VCS directories, you can use the same kind of rule outside
+# OASIS_START/STOP if you want to exclude directories that contains
 # useless stuff for the build process
 <**/.svn>: -traverse
 <**/.svn>: not_hygienic
@@ -18,8 +18,8 @@
 <lib/typehashlib.{cma,cmxa}>: use_libtypehashlib_stubs
 # Library pa_typehash
 "syntax/pa_typehash.cmxs": use_pa_typehash
-<syntax/*.ml{,i}>: pkg_camlp4.lib
-<syntax/*.ml{,i}>: pkg_camlp4.quotations
-<syntax/*.ml{,i}>: pkg_type_conv
+<syntax/*.ml{,i}>: package(camlp4.lib)
+<syntax/*.ml{,i}>: package(camlp4.quotations)
+<syntax/*.ml{,i}>: package(type_conv)
 # OASIS_STOP
 <syntax/pa_typehash.ml>: syntax_camlp4o,pkg_camlp4.extend
